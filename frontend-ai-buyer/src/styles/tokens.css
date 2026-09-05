@@ -1,0 +1,126 @@
+:root {
+  /* Brand identity -- exactly three colors: navy, blue, white. */
+  --color-navy: #012652;
+  --color-navy-deep: #010f28;
+  --color-blue: #0d94fb;
+  --color-white: #ffffff;
+
+  /* The app's signature surface: the brand gradient runs the full canvas
+     width, navy -> blue -> a soft white highlight on the far edge -- panels
+     are near-opaque frosted glass on top so contrast holds everywhere the
+     gradient runs light. */
+  --gradient-app: linear-gradient(180deg, rgba(1, 38, 82, 1) 0%, rgba(13, 148, 251, 1) 32%, rgba(204, 202, 202, 1) 88%);
+  --gradient-accent: linear-gradient(135deg, #0d94fb 0%, #0a6fd6 100%);
+
+  /* Surfaces -- mostly solid dark cards with a crisp hairline border, not
+     heavy frosted glass. A little blur keeps some depth against the
+     gradient, but opacity is high enough that these read as defined cards,
+     not a glossy overlay. */
+  --glass-bg: rgba(1, 14, 33, 0.94);
+  --glass-bg-strong: rgba(1, 9, 24, 0.97);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
+
+  --color-bg: var(--color-navy-deep);
+  --color-surface: var(--glass-bg);
+  --color-surface-raised: rgba(255, 255, 255, 0.07);
+  --color-surface-solid: #0d3565;
+  --color-text: #ffffff;
+  --color-text-muted: #ffffff;
+  --color-border: var(--glass-border);
+  --color-border-strong: var(--glass-border-strong);
+  --color-ink: #ffffff;
+  --color-accent: var(--color-blue);
+  --color-success: #2fd68f;
+  --color-danger: #ff6b6b;
+
+  --border-width: 1.5px;
+  --border-width-lg: 2px;
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.75rem;
+  --text-4xl: 3.5rem;
+
+  --font-display: 'Poppins', 'Arial', sans-serif;
+  --font-body: 'Poppins', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+
+  --blur-glass: 10px;
+}
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  box-shadow: 0 1px 0 var(--glass-highlight) inset, 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border-strong);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  box-shadow: 0 1px 0 var(--glass-highlight) inset, 0 8px 20px rgba(0, 0, 0, 0.24);
+}
+
+.press-on-active:active {
+  transform: scale(0.97);
+}
+
+/* Bare icon buttons (MessageBubble.jsx's feedback row, etc) -- no boxed
+   background at rest, just a soft hover fill so the click target still
+   reads clearly against the app's gradient background. */
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Small uppercase mono label used above a section heading -- a consistent
+   "data readout" mark that ties back to the agent's own data (real prices,
+   real orders, real spend), not a decorative flourish. */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+/* Signature accent -- a thin gradient top edge, reserved for the one card
+   per screen that matters most (the wallet, the AI's own verdict). Not
+   applied broadly, so it keeps meaning "this is the important one". */
+.signature-edge {
+  position: relative;
+}
+.signature-edge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--radius-lg);
+  right: var(--radius-lg);
+  height: 2px;
+  background: var(--gradient-accent);
+  border-radius: 2px;
+}
