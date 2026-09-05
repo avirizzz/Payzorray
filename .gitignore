@@ -1,0 +1,32 @@
+node_modules/
+.env
+.env.local
+.DS_Store
+*.log
+dist/
+
+# ~620MB of real product photos, served directly from this folder by the
+# backend (see src/index.js) -- not something to put in git history.
+archive/
+
+# Raw scraped seed CSVs (~35MB) -- only needed by src/db/seed*.js scripts,
+# not the app itself. See README for how to source these locally.
+data/marketplace_seed/*.csv
+data/marketplace_seed/*.csv.gz
+
+# Scratch file, not part of the project.
+orignalprompt
+
+# Editor/tool-local state, not project source.
+*.code-workspace
+.impeccable/
+
+# Superseded by hotwheels_products.json (the file src/db/seed.js actually reads).
+hotwheels_products.js
+
+# Older buyer-side app, superseded by frontend-ai-buyer -- not part of this push.
+frontend-storefront/
+
+# Scratch copy-paste helper for whichever migration is pending in Supabase's
+# SQL editor -- the real, numbered migration always lives in src/db/migrations/.
+RUN_THIS_MIGRATION.sql

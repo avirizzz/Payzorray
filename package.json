@@ -1,0 +1,26 @@
+{
+  "name": "shopitforme",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.41",
+    "@ai-sdk/google": "^4.0.50",
+    "@supabase/supabase-js": "^2.112.3",
+    "ai": "^7.0.77",
+    "cors": "^2.8.6",
+    "csv-parse": "^7.0.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pdfkit": "^0.20.1",
+    "razorpay": "^2.9.8",
+    "zod": "^4.4.3"
+  }
+}
