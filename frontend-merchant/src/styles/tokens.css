@@ -1,0 +1,168 @@
+:root {
+  /* Brand identity -- exactly three colors: navy, blue, white. */
+  --color-navy: #012652;
+  --color-navy-deep: #010f28;
+  --color-blue: #0d94fb;
+  --color-white: #ffffff;
+
+  /* The app's signature surface: the brand gradient runs the full canvas
+     width, navy -> blue -> a soft white highlight on the far edge -- panels
+     are near-opaque frosted glass on top so contrast holds everywhere the
+     gradient runs light. */
+  --gradient-app: linear-gradient(180deg, rgba(1, 38, 82, 1) 0%, rgba(13, 148, 251, 1) 32%, rgba(204, 202, 202, 1) 88%);
+  --gradient-accent: linear-gradient(135deg, #0d94fb 0%, #0a6fd6 100%);
+
+  /* Surfaces -- true frosted glass over the flat brand-blue background:
+     translucent white, blurred, with a bright hairline edge so panels read
+     as glass rather than flat navy boxes. */
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(255, 255, 255, 0.16);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
+
+  --color-bg: var(--color-navy-deep);
+  --color-surface: var(--glass-bg);
+  --color-surface-raised: rgba(255, 255, 255, 0.07);
+  --color-surface-solid: #0d3565;
+  --color-text: #ffffff;
+  --color-text-muted: #ffffff;
+  --color-border: var(--glass-border);
+  --color-border-strong: var(--glass-border-strong);
+  --color-ink: #ffffff;
+  --color-accent: var(--color-blue);
+  --color-success: #2fd68f;
+  --color-danger: #ff6b6b;
+
+  --border-width: 1.5px;
+  --border-width-lg: 2px;
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+  /* Two-tier glass radius, both kept tight -- soft 20px corners on a data
+     dashboard read as consumer-app fluff; these are records and receipts,
+     so the corners stay crisp. */
+  --radius-panel: 12px;
+  --radius-row: 8px;
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+
+  /* Scale nudged up one step across the board -- 12px body copy on a
+     translucent surface was the smallest thing fighting for legibility
+     here, and glass already costs contrast. --text-xs is now the floor at
+     13px and is only used for secondary metadata, never running text. */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-md: 1.1875rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.625rem;
+  --text-2xl: 2.125rem;
+  --text-3xl: 2.75rem;
+  --text-4xl: 3.5rem;
+
+  --font-display: 'Poppins', 'Arial', sans-serif;
+  --font-body: 'Poppins', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+
+  --blur-glass: 10px;
+}
+
+/* True glassmorphism -- every "card" in this app (stat tiles, order rows,
+   catalog rows, chat bubbles/input, the store picker list) uses this, so
+   panels read as frosted glass floating over the flat brand-blue
+   background instead of flat navy boxes. */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-panel);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  color: #ffffff;
+}
+
+.glass-card-strong {
+  background: var(--glass-bg-strong);
+}
+
+/* Dense list rows (orders, catalog, flagged events) -- same glass surface,
+   tighter radius and a thinner shadow so many stacked rows read as a
+   scannable list, not a stack of oversized hero panels. */
+.glass-card-row {
+  border-radius: var(--radius-row);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  pointer-events: none;
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3));
+  pointer-events: none;
+}
+
+.press-on-active:active {
+  transform: scale(0.97);
+}
+
+/* Bare icon buttons (MessageBubble.jsx's feedback row, etc) -- no boxed
+   background at rest, just a soft hover fill so the click target still
+   reads clearly against the app's gradient background. */
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Small uppercase mono label used above a section heading -- a consistent
+   "data readout" mark that ties back to the agent's own data (real prices,
+   real orders, real spend), not a decorative flourish. */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+/* Signature accent -- a thin gradient top edge, reserved for the one card
+   per screen that matters most (the wallet, the AI's own verdict). Not
+   applied broadly, so it keeps meaning "this is the important one". */
+.signature-edge {
+  position: relative;
+}
+.signature-edge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--radius-lg);
+  right: var(--radius-lg);
+  height: 2px;
+  background: var(--gradient-accent);
+  border-radius: 2px;
+}

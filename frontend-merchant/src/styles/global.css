@@ -1,0 +1,251 @@
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Payzorray's own display face -- used for every headline in this app
+   (landing hero, dashboard page titles) so the merchant side reads as one
+   consistent brand, not the landing page plus a generic dashboard bolted on. */
+@font-face {
+  font-family: 'Geist Mono Landing';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('https://static.figma.com/font/GeistMono_wght__1') format('woff2');
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-navy);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+/* Landing page's own background (features/footer, below the video hero) --
+   the photo at its natural color. */
+.landing-bg {
+  background-image: url('/merchant-background.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* The merchant app itself (picker + every dashboard page) -- the same
+   photo, color-blended down to one flat brand blue rather than its
+   natural mixed tones, so the merchant side reads as a single solid color
+   with glass panels floating on it. */
+.merchant-bg {
+  background-color: #0a6fd6;
+  background-image: linear-gradient(rgba(10, 111, 214, 0.82), rgba(10, 111, 214, 0.82)), url('/merchant-background.png');
+  background-blend-mode: color;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* Sidebar nav -- white surface per the merchant brand redesign, blue text
+   at rest, inverts to a solid blue pill with white text on hover/active
+   (can't express hover via inline style, hence a real class here). */
+.merchant-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: #0d94fb;
+  font-weight: 500;
+  font-size: var(--text-sm);
+  background: transparent;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.merchant-nav-link:hover,
+.merchant-nav-link.active {
+  background: #0d94fb;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+/* Skeleton.jsx -- sized placeholder blocks for loading states, replacing
+   plain "Loading..." text across the dashboard. */
+.skeleton {
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.14);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+h1 {
+  letter-spacing: -0.03em;
+}
+
+/* The one recurring headline treatment -- landing hero and every dashboard
+   page's H1 share it, so the typography itself is what ties the two halves
+   of the app together. */
+.brand-heading {
+  font-family: 'Geist Mono Landing', 'JetBrains Mono', monospace;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  background: linear-gradient(247deg, rgb(255, 255, 255) 2%, rgba(255, 255, 255, 0.55) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-mono {
+  font-family: 'Geist Mono Landing', 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+
+/* Dashboard page titles. The gradient-clip treatment above is built for the
+   landing hero's huge type -- at page-title size it fades the second half of
+   the word to 55% and just reads washed out, so in-app titles are solid
+   white, heavier, and larger, with a mono eyebrow above carrying the
+   context instead. */
+.page-title {
+  font-family: 'Geist Mono Landing', 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: clamp(1.75rem, 2.6vw, 2.25rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #ffffff;
+}
+
+.page-eyebrow {
+  font-family: 'Geist Mono Landing', 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* "Ask about this ..." action on Catalog/Orders rows -- inverts to solid
+   brand blue on hover, the same gesture the sidebar nav uses, so the one
+   interactive control on a card behaves like the rest of the app. */
+.ask-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+.ask-btn:hover {
+  background: #0d94fb;
+  border-color: #0d94fb;
+  color: #ffffff;
+}
+
+/* Row hover -- a row is a target (Catalog opens a question, Orders is a
+   receipt), so it lifts very slightly on hover instead of staying inert. */
+.row-hover {
+  transition: transform var(--transition-fast), background var(--transition-fast);
+}
+.row-hover:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.42);
+}
+@media (prefers-reduced-motion: reduce) {
+  .row-hover:hover {
+    transform: none;
+  }
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+a {
+  color: inherit;
+}
+
+.gauge-number {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: var(--color-blue);
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Word-by-word reveal for streamed agent replies (StreamingText.jsx) --
+   defined globally, not per-component, since every agent text bubble reuses
+   the same two keyframes. */
+@keyframes stream-word-in {
+  0% {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes stream-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
