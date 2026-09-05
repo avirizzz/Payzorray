@@ -12,6 +12,8 @@
 </a>
 </p>
 
+[![Watch the Demo Video](https://img.youtube.com/vi/YOUR_YOUTUBE_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_YOUTUBE_VIDEO_ID)
+
 <p align="center">
   <img src="docs/brand/razegpt-logo.png" alt="RazeGPT — the AI buyer" height="90">
   &nbsp;&nbsp;
