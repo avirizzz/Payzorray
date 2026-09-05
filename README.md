@@ -2,7 +2,6 @@
 
 *Two LLM agents that actually move real money and real inventory, kept honest by a deterministic gate neither of them can talk its way past.*
 
-
 # VIDEO DEMO 
 
 *I MAY HAVE GIVEN THE WRONG URL IN THE GOOGLE FORM, PLEASE WATCH THE YOUTUBE DEMP FROM HERE*
@@ -11,8 +10,6 @@
   <img src="https://img.youtube.com/vi/dWTQlQU5DRw/maxresdefault.jpg" alt="Watch the video" width="600">
 </a>
 </p>
-
-[![Watch the Demo Video](https://img.youtube.com/vi/YOUR_YOUTUBE_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_YOUTUBE_VIDEO_ID)
 
 <p align="center">
   <img src="docs/brand/razegpt-logo.png" alt="RazeGPT — the AI buyer" height="90">
