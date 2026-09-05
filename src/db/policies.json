@@ -1,0 +1,21 @@
+{
+  "merchant": {
+    "merchant_id": "M-NISSAN-JDM-001",
+    "autonomous_purchase_limits": {
+      "HUMAN_CHATBOT": {
+        "max_amount_inr": 5000
+      },
+      "AI_BUYER_AGENT": {
+        "max_amount_inr": 10000
+      }
+    },
+    "policies": {
+      "returns": "14-day no questions asked returns for unopened items. Opened diecast models cannot be returned.",
+      "delivery": "Standard delivery takes 3-5 business days. Expedited delivery to Mumbai/Delhi takes 2 days.",
+      "upsell": {
+        "max_price_increase_percentage": 20,
+        "enabled": true
+      }
+    }
+  }
+}

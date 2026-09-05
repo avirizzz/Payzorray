@@ -1,0 +1,80 @@
+{
+  "storefront-shopper": {
+    "customer_id": "C101",
+    "caller_type": "HUMAN_CHATBOT",
+    "name": "Aviral Pratap",
+    "email": "avp610@gmail.com",
+    "phone": "+91-90000-00001",
+    "payment_methods": [
+      {
+        "id": "pm-1",
+        "label": "Test Card •••• 4366",
+        "type": "card",
+        "brand": "Visa",
+        "last4": "4366",
+        "number": "4718 6091 0820 4366",
+        "note": "Razorpay's real test card -- any CVV, any future expiry."
+      },
+      {
+        "id": "pm-2",
+        "label": "Netbanking",
+        "type": "netbanking",
+        "note": "Real Razorpay test-mode netbanking flow -- works one-time on this account."
+      },
+      {
+        "id": "pm-3",
+        "label": "Wallet",
+        "type": "wallet",
+        "note": "Real Razorpay test-mode wallet flow -- works one-time on this account."
+      },
+      {
+        "id": "pm-4",
+        "label": "UPI — success@razorpay",
+        "type": "upi",
+        "vpa": "success@razorpay",
+        "note": "Confirmed broken end-to-end on this test account -- kept wired up and disabled via frontend-storefront/src/config/paymentMethods.js's UPI_ENABLED flag, not removed, so it's ready to re-enable."
+      }
+    ],
+    "default_address_id": "addr-1",
+    "default_payment_method_id": "pm-1"
+  },
+  "ai-buyer-agent": {
+    "customer_id": "C102",
+    "caller_type": "AI_BUYER_AGENT",
+    "name": "Aviral Pratap",
+    "email": "avp610@gmail.com",
+    "phone": "+91-90000-00002",
+    "payment_methods": [
+      {
+        "id": "pm-1",
+        "label": "Test Card •••• 4366",
+        "type": "card",
+        "brand": "Visa",
+        "last4": "4366",
+        "number": "4718 6091 0820 4366",
+        "note": "Razorpay's real test card -- any CVV, any future expiry."
+      },
+      {
+        "id": "pm-2",
+        "label": "Netbanking",
+        "type": "netbanking",
+        "note": "Real Razorpay test-mode netbanking flow -- works one-time on this account."
+      },
+      {
+        "id": "pm-3",
+        "label": "Wallet",
+        "type": "wallet",
+        "note": "Real Razorpay test-mode wallet flow -- works one-time on this account."
+      },
+      {
+        "id": "pm-4",
+        "label": "UPI — success@razorpay",
+        "type": "upi",
+        "vpa": "success@razorpay",
+        "note": "Confirmed broken end-to-end on this test account -- kept wired up and disabled via frontend-storefront/src/config/paymentMethods.js's UPI_ENABLED flag, not removed, so it's ready to re-enable."
+      }
+    ],
+    "default_address_id": "addr-1",
+    "default_payment_method_id": "pm-1"
+  }
+}
