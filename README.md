@@ -3,6 +3,12 @@
 *Two LLM agents that actually move real money and real inventory, kept honest by a deterministic gate neither of them can talk its way past.*
 
 <p align="center">
+  <img src="docs/brand/razegpt-logo.png" alt="RazeGPT — the AI buyer" height="90">
+  &nbsp;&nbsp;
+  <img src="docs/brand/payzorray-logo.png" alt="Payzorray — the merchant platform" height="90">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/Express_5-000000?style=flat-square&logo=express&logoColor=white" alt="Express 5">
   <img src="https://img.shields.io/badge/React_18-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React 18">
