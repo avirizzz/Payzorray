@@ -1,0 +1,256 @@
+:root {
+  --bg: #030509;
+  --panel-bg: rgba(8, 14, 24, 0.82);
+  --panel-bg-strong: rgba(12, 20, 34, 0.92);
+  --line: rgba(0, 229, 255, 0.22);
+  --line-bright: rgba(0, 229, 255, 0.55);
+  --cyan: #00e5ff;
+  --cyan-dim: rgba(0, 229, 255, 0.5);
+  --ai: #c084ff;
+  --ai-bg: rgba(192, 132, 255, 0.07);
+  --code: #39ff9d;
+  --code-bg: rgba(57, 255, 157, 0.06);
+  --fail: #ff3b5c;
+  --fail-bg: rgba(255, 59, 92, 0.08);
+  --warn: #ffb020;
+  --text: #dff3ff;
+  --text-dim: rgba(223, 243, 255, 0.5);
+  --text-faint: rgba(223, 243, 255, 0.28);
+  --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  background-image: linear-gradient(rgba(0, 229, 255, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 229, 255, 0.035) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% -10%, rgba(0, 229, 255, 0.08), transparent 55%);
+  background-size: 34px 34px, 34px 34px, 100% 100%;
+  background-attachment: fixed;
+}
+
+pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+button {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.18);
+  border-radius: 4px;
+}
+
+/* -------- HUD panel: clipped corners, glowing border, corner ticks -------- */
+.hud-panel {
+  position: relative;
+  background: var(--panel-bg);
+  border: 1px solid var(--line);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.05) inset, 0 0 22px rgba(0, 229, 255, 0.05);
+  clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  backdrop-filter: blur(6px);
+}
+
+.hud-panel.tone-fail {
+  border-color: rgba(255, 59, 92, 0.55);
+  box-shadow: 0 0 0 1px rgba(255, 59, 92, 0.12) inset, 0 0 26px rgba(255, 59, 92, 0.16);
+}
+
+.hud-panel.tone-live {
+  border-color: rgba(0, 229, 255, 0.6);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.15) inset, 0 0 30px rgba(0, 229, 255, 0.18);
+}
+
+.hud-corner {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-color: var(--cyan-dim);
+  pointer-events: none;
+}
+.hud-corner.tr {
+  top: -1px;
+  right: -1px;
+  border-top: 1.5px solid var(--cyan-dim);
+  border-right: 1.5px solid var(--cyan-dim);
+}
+.hud-corner.bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 1.5px solid var(--cyan-dim);
+  border-left: 1.5px solid var(--cyan-dim);
+}
+
+.hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.14);
+  flex-shrink: 0;
+}
+
+.hud-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hud-title::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  flex-shrink: 0;
+}
+
+.hud-body {
+  padding: 12px 14px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* -------- live pulse indicator -------- */
+.pulse-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  animation: pulse-ring 1.5s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* -------- scanning sweep on the live panel -------- */
+.scan-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.scan-sweep::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 0.06) 50%, rgba(0, 229, 255, 0) 100%);
+  animation: scan-move 2.6s linear infinite;
+}
+@keyframes scan-move {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(350%);
+  }
+}
+
+/* -------- segmented budget bar -------- */
+.segment-bar {
+  display: flex;
+  gap: 3px;
+}
+.segment {
+  height: 6px;
+  flex: 1;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.15);
+}
+.segment.lit {
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  border-color: var(--cyan);
+}
+
+.flicker-in {
+  animation: flicker-in 0.35s ease;
+}
+@keyframes flicker-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* -------- flow-arrow dash movement: idle arrows still read as a real
+   circuit trace (dashed, static); active arrows visibly march, like data
+   is actually moving through the pipe right now. -------- */
+.flow-dash-idle {
+  stroke-dashoffset: 0;
+}
+.flow-dash-active {
+  animation: flow-dash-move 0.6s linear infinite;
+}
+@keyframes flow-dash-move {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+
+.blink-slow {
+  animation: blink-slow 1.6s ease-in-out infinite;
+}
+@keyframes blink-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
