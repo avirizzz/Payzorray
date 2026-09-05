@@ -1,0 +1,107 @@
+# Payzorray
+
+An agentic commerce platform built for a hackathon: two LLM agents — a buyer agent (**RazeGPT**) and a merchant agent (**Payzorray**) — that can actually search a real catalog, place real Razorpay orders, and run a real merchant's storefront, sitting on top of one Express + Postgres (Supabase, with pgvector) backend. It was built with Claude Code, which is on-theme for the event rather than something to hide — what's worth showing is how it's built, not that it was built fast.
+
+## The idea the whole codebase is organized around
+
+Every interesting design decision here traces back to one rule: **the AI proposes, deterministic code decides and executes.** An LLM tool call can suggest a product, suggest a discount, suggest cancelling an order — but it never touches money or a database row directly. A `propose_purchase` tool call returns a candidate; a separate, boring, fully-tested checkout sequence re-validates price, stock, delivery, policy, and mandate cap from scratch before a payment call happens. If the AI is wrong, or hallucinates, or gets talked into something adversarial, the worst case is a rejected proposal, not a bad charge.
+
+Here's the whole system end to end — two chat surfaces talking to one Express API, one Postgres database doing double duty as the product catalog (pgvector) and the ledger (mandates, orders, audit), and an event bus feeding a live observability UI over SSE:
+
+<p align="center">
+  <img src="docs/diagrams/full-system-architecture.png" alt="Full system architecture: RazeGPT and Payzorray talking to one Express API, a Checkout Engine gate, Postgres+pgvector, Razorpay, and an SSE-fed Observability UI" width="850">
+</p>
+
+## What's actually in here
+
+Three separate Vite/React apps share the one backend, each doing a genuinely different job rather than being reskins of each other:
+
+- **frontend-ai-buyer** — the buyer-facing chat. Real cart, real Razorpay Checkout.js, a persisted spending-cap wallet, coupon application at both single-item and whole-cart granularity, order tracking, invoices.
+- **frontend-merchant** — a real merchant dashboard: sales analytics computed from actual order rows (not a mock), a catalog "AI findability" grader, coupon/bundle campaign creation, and a chat agent scoped to that one merchant's own data.
+- **frontend-observability** — a live dashboard streaming every tool call, every LLM round-trip, every Razorpay API call, and every audit record as they happen, plus a control that replays any past conversation's exact recorded event sequence at its original pacing.
+
+## The agents
+
+Both agents run on the same mechanism — the Vercel AI SDK's `generateText` with a `tools` object and `stepCountIs()` as the loop's stop condition — but they're two separate files with two separate tool surfaces and two separate step budgets, on purpose, so tuning one can't silently change the other's behavior:
+
+<p align="center">
+  <img src="docs/diagrams/agent-architecture.png" alt="Agent architecture: buyer and merchant tool sets feeding a traced Vercel AI SDK loop against the Gemini API, with Zod validating every tool call" width="850">
+</p>
+
+The buyer agent gets a 12-step budget and a 35-second wall clock per turn; the merchant agent gets 10 steps and 60 seconds (merchant questions tend to be one or two heavy analytics calls rather than a long back-and-forth). Both run on `gemini-3.1-flash-lite` via `@ai-sdk/google`, and every single tool call — args, result, timing, outcome — is captured by a `traced()` wrapper before the model ever sees the result, which is also what feeds the observability stream and the replay feature.
+
+The buyer agent's 19 tools cover search (`search_products` against the real catalog, `web_search_products` against the open web via Tavily, clearly labeled as not purchasable here), cart and checkout (`add_to_cart`, `propose_purchase`, `process_shopping_list` for goal-style requests like "what do I need for chicken biryani"), and account questions (`get_order_activity`, `get_spending_stats`, `check_coupon`, and ten more). The merchant agent's 10 tools are read-only by design — `get_sales_analytics`, `get_low_readiness_products`, `diagnose_business`, `get_upsell_performance` — a merchant can ask anything about their store, but nothing in that tool list can change a price, edit a listing, or move money; campaign creation happens through the dashboard's own forms, never through the chat tool-calling loop.
+
+## The checkout gate
+
+The part of this codebase that got the most attention wasn't the AI — it was making sure the AI's output never becomes an unbounded spend. Three concrete mechanisms do that work.
+
+A **mandate** is a bounded, single-purpose spending authorization (max amount, expiry, one caller type) rather than a standing "yes." Debiting one against concurrent orders had an obvious race — read `remaining_balance`, subtract in JS, write it back — so that's a single atomic Postgres function instead:
+
+```sql
+CREATE OR REPLACE FUNCTION debit_mandate(p_approval_id TEXT, p_amount NUMERIC)
+RETURNS SETOF mandates LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  UPDATE mandates
+  SET remaining_balance = remaining_balance - p_amount,
+      status = CASE WHEN remaining_balance - p_amount <= 0 THEN 'CONSUMED' ELSE status END
+  WHERE approval_id = p_approval_id AND status = 'ACTIVE' AND remaining_balance >= p_amount
+  RETURNING *;
+END; $$;
+```
+
+Every order-creation call also carries an idempotency key derived from `(customer_id, conversation_id, approval_id, product_id)` — not a random UUID, but something a retried tool call reproduces exactly — so a flaky network retry or the model deciding to "try that again" replays the cached result instead of charging twice. And the price the agent last mentioned in conversation is never trusted as the transaction amount: `executeCheckoutSequence` re-fetches the product and compares against the caller-supplied price, returning `PRICE_CHANGED` and refusing to proceed if they disagree, whether that mismatch came from a stale quote, a real price change mid-conversation, or the model simply misremembering a number.
+
+## Search and retrieval
+
+Product search is real vector similarity search, not keyword matching with an AI label on it. Every product's `name + description + tags` is embedded once at seed time with `gemini-embedding-001` (768 dimensions), and every query is embedded live and compared via a Postgres `match_products()` function using pgvector's cosine distance operator (`<=>`) against an HNSW index. Two thresholds gate what the agent is even allowed to see: candidates below 0.62 similarity are dropped as noise, and only candidates at or above 0.75 are treated as high-confidence matches worth stating plainly rather than hedging. The catalog behind this is real, seeded product data — 1,324 products across three merchants (500 Hot Wheels die-cast, 377 BigBasket groceries, 447 Flipkart tech/fashion) — not synthetic placeholders.
+
+## What's real, what's simulated, and why
+
+This is the part most write-ups skip, but it's the most interesting engineering finding in the project: on this Razorpay test account, three independent recurring-charge mechanisms were tried and confirmed blocked, not assumed unsupported.
+
+- **UPI Autopay / eMandate registration** — the consent-registration step never completed on this account.
+- **Server-to-server token recurring charges** — Razorpay's own order-creation API doesn't error when a recurring `token` block can't be honored; it silently strips the token from the response instead. `createAuthorizationOrder()` checks for that explicitly (`if (!order.token) throw ...`) because trusting the happy path here would have hidden the failure.
+- **Subscriptions-based auto-recharge** — same account-level restriction, confirmed through the Subscriptions API directly.
+
+Rather than block the wallet feature entirely, mandates can be marked `simulated` (a real column, added in a dedicated migration) — a fake bank/NPCI consent screen stands in for the registration step, and a charge against a simulated mandate calls `simulateMandateCharge()` instead of a real recurring debit. Every layer that touches this — the DB row, the audit trail, the observability dashboard's payment-method tag — labels it as simulated explicitly; nothing pretends a fake debit is a real gateway confirmation. The one-time Checkout.js flow (a real popup, a real payment, the buyer's own choice of card/UPI/netbanking) is unaffected and used for every actual charge in the demo — the wallet's spend-cap logic (mandate check, idempotency key, price re-validation) is identical either way, deliberately independent of which Razorpay mechanism executes underneath it.
+
+## Project layout
+
+```
+src/
+  routes/            Express routes -- 66 real endpoints across commerce, AI, merchant, webhooks
+  services/
+    core/            Checkout sequence, mandate math, idempotency -- no I/O, fully unit-tested
+    payments/        Razorpay integration (orders, recurring charges, webhooks, refunds)
+    commerce/        Coupons, campaigns, analytics, catalog readiness grading, shipping
+    ai/              Both agent loops, both tool surfaces, embeddings, narration
+    observability/   The event bus every tool/LLM/payment call publishes onto
+  db/                Supabase client, one file per table, marketplace seeding scripts
+  db/migrations/     13 numbered, additive SQL migrations -- the real schema history
+
+frontend-ai-buyer/          RazeGPT -- the buyer chat app
+frontend-merchant/          Payzorray -- the merchant dashboard
+frontend-observability/     Live agent + payment trace viewer
+docs/                       Architecture deep-dives, project overview, engineering postmortem
+```
+
+## Running it
+
+Backend needs Supabase (Postgres + pgvector), a Razorpay test account, and a Gemini API key — see `.env.example` for the full list, and run every file in `src/db/migrations/` once against your Supabase project, in order.
+
+```bash
+npm install && npm test        # 66 tests, no network required
+node src/index.js              # backend on :3000
+
+cd frontend-ai-buyer && npm install && npm run dev
+cd frontend-merchant && npm install && npm run dev
+cd frontend-observability && npm install && npm run dev
+```
+
+Catalog seeding is separate and optional — the scripts in `src/db/seed*.js` read from CSVs in `data/marketplace_seed/` (not included in this repo; point them at your own Amazon/BigBasket/Flipkart-style product exports) and call the real Gemini embeddings API, so they're rate-limited deliberately (batched, with cooldowns) rather than fired all at once.
+
+## Further reading
+
+[docs/agents-architecture.md](docs/agents-architecture.md) is a full walkthrough of both agents' tool surfaces and guardrails. [docs/project-overview.md](docs/project-overview.md) covers the backend and cross-cutting architecture. [docs/technical-challenges.md](docs/technical-challenges.md) is a short postmortem of the real engineering problems hit while building this — idempotency under agent retries, reconciling two async sources of truth for one payment, why guardrails belong in code rather than the system prompt, and why an agent's own tool-calling loop needs a hard step budget.
