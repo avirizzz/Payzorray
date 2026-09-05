@@ -1,6 +1,21 @@
 # Payzorray
 
+*Two LLM agents that actually move real money and real inventory, kept honest by a deterministic gate neither of them can talk its way past.*
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/Express_5-000000?style=flat-square&logo=express&logoColor=white" alt="Express 5">
+  <img src="https://img.shields.io/badge/React_18-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React 18">
+  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase">
+  <img src="https://img.shields.io/badge/pgvector-336791?style=flat-square&logo=postgresql&logoColor=white" alt="pgvector">
+  <img src="https://img.shields.io/badge/Razorpay-02042B?style=flat-square&logo=razorpay&logoColor=white" alt="Razorpay">
+  <img src="https://img.shields.io/badge/Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white" alt="Google Gemini">
+  <img src="https://img.shields.io/badge/Vercel_AI_SDK-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel AI SDK">
+</p>
+
 An agentic commerce platform built for a hackathon: two LLM agents — a buyer agent (**RazeGPT**) and a merchant agent (**Payzorray**) — that can actually search a real catalog, place real Razorpay orders, and run a real merchant's storefront, sitting on top of one Express + Postgres (Supabase, with pgvector) backend. It was built with Claude Code, which is on-theme for the event rather than something to hide — what's worth showing is how it's built, not that it was built fast.
+
+---
 
 ## The idea the whole codebase is organized around
 
@@ -16,9 +31,11 @@ Here's the whole system end to end — two chat surfaces talking to one Express 
 
 Three separate Vite/React apps share the one backend, each doing a genuinely different job rather than being reskins of each other:
 
-- **frontend-ai-buyer** — the buyer-facing chat. Real cart, real Razorpay Checkout.js, a persisted spending-cap wallet, coupon application at both single-item and whole-cart granularity, order tracking, invoices.
-- **frontend-merchant** — a real merchant dashboard: sales analytics computed from actual order rows (not a mock), a catalog "AI findability" grader, coupon/bundle campaign creation, and a chat agent scoped to that one merchant's own data.
-- **frontend-observability** — a live dashboard streaming every tool call, every LLM round-trip, every Razorpay API call, and every audit record as they happen, plus a control that replays any past conversation's exact recorded event sequence at its original pacing.
+| App | Surface | What it actually does |
+|---|---|---|
+| `frontend-ai-buyer` | RazeGPT — buyer chat | Real cart, real Razorpay Checkout.js, a persisted spending-cap wallet, coupon application at both single-item and whole-cart granularity, order tracking, invoices |
+| `frontend-merchant` | Payzorray — merchant dashboard | Sales analytics computed from actual order rows (not a mock), a catalog "AI findability" grader, coupon/bundle campaign creation, a chat agent scoped to that one merchant's own data |
+| `frontend-observability` | Live trace viewer | Streams every tool call, every LLM round-trip, every Razorpay API call, and every audit record as they happen, plus a control that replays any past conversation's exact recorded event sequence at its original pacing |
 
 ## The agents
 
@@ -28,9 +45,31 @@ Both agents run on the same mechanism — the Vercel AI SDK's `generateText` wit
   <img src="docs/diagrams/agent-architecture.png" alt="Agent architecture: buyer and merchant tool sets feeding a traced Vercel AI SDK loop against the Gemini API, with Zod validating every tool call" width="850">
 </p>
 
-The buyer agent gets a 12-step budget and a 35-second wall clock per turn; the merchant agent gets 10 steps and 60 seconds (merchant questions tend to be one or two heavy analytics calls rather than a long back-and-forth). Both run on `gemini-3.1-flash-lite` via `@ai-sdk/google`, and every single tool call — args, result, timing, outcome — is captured by a `traced()` wrapper before the model ever sees the result, which is also what feeds the observability stream and the replay feature.
+Merchant questions tend to be one or two heavy analytics calls rather than a long back-and-forth, so the two loops aren't tuned the same:
 
-The buyer agent's 19 tools cover search (`search_products` against the real catalog, `web_search_products` against the open web via Tavily, clearly labeled as not purchasable here), cart and checkout (`add_to_cart`, `propose_purchase`, `process_shopping_list` for goal-style requests like "what do I need for chicken biryani"), and account questions (`get_order_activity`, `get_spending_stats`, `check_coupon`, and ten more). The merchant agent's 10 tools are read-only by design — `get_sales_analytics`, `get_low_readiness_products`, `diagnose_business`, `get_upsell_performance` — a merchant can ask anything about their store, but nothing in that tool list can change a price, edit a listing, or move money; campaign creation happens through the dashboard's own forms, never through the chat tool-calling loop.
+| | RazeGPT (buyer) | Payzorray (merchant) |
+|---|---|---|
+| Model | `gemini-3.1-flash-lite` | `gemini-3.1-flash-lite` |
+| Step budget | 12 tool-calling rounds | 10 tool-calling rounds |
+| Wall-clock cap | 35s per turn | 60s per turn |
+| Tool surface | 19 tools, read + write | 10 tools, **read-only** |
+| Can move money? | Proposes only — never executes | No |
+
+Every single tool call — args, result, timing, outcome — is captured by a `traced()` wrapper before the model ever sees the result, which is also what feeds the observability stream and the replay feature. The merchant agent's tools are deliberately read-only: a merchant can ask anything about their store (`get_sales_analytics`, `get_low_readiness_products`, `diagnose_business`, `get_upsell_performance`), but nothing in that tool list can change a price, edit a listing, or move money — campaign creation happens through the dashboard's own forms, never through the chat loop. The buyer agent can propose and add to cart, but `propose_purchase` only ever returns a candidate for the checkout gate below to re-validate; it doesn't charge anything itself.
+
+<details>
+<summary>All 19 buyer tools</summary>
+
+`search_products` · `web_search_products` · `process_shopping_list` · `find_similar` · `compare_products` · `propose_purchase` · `add_to_cart` · `get_wallet_status` · `get_order_history` · `get_order_details` · `get_order_activity` · `propose_cancellation` · `get_available_coupons` · `check_coupon` · `browse_catalog` · `get_product_details` · `get_invoice` · `get_spending_stats` · `get_profile`
+
+</details>
+
+<details>
+<summary>All 10 merchant tools</summary>
+
+`get_merchant_stats` · `get_recent_orders` · `get_order_details` · `get_flagged_events` · `get_low_readiness_products` · `get_inventory_status` · `get_upsell_performance` · `get_campaign_performance` · `get_sales_analytics` · `diagnose_business`
+
+</details>
 
 ## The checkout gate
 
@@ -101,6 +140,8 @@ cd frontend-observability && npm install && npm run dev
 ```
 
 Catalog seeding is separate and optional — the scripts in `src/db/seed*.js` read from CSVs in `data/marketplace_seed/` (not included in this repo; point them at your own Amazon/BigBasket/Flipkart-style product exports) and call the real Gemini embeddings API, so they're rate-limited deliberately (batched, with cooldowns) rather than fired all at once.
+
+---
 
 ## Further reading
 
