@@ -7,9 +7,9 @@
 
 *I MAY HAVE GIVEN THE WRONG URL IN THE GOOGLE FORM, PLEASE WATCH THE YOUTUBE DEMP FROM HERE*
 <p align="center">
-  <a href="https://youtube.com">
-    <img src="https://www.youtube.com/watch?v=dWTQlQU5DRw" alt="Watch the video" width="600">
-  </a>
+<a href="https://www.youtube.com/watch?v=dWTQlQU5DRw">
+  <img src="https://img.youtube.com/vi/dWTQlQU5DRw/maxresdefault.jpg" alt="Watch the video" width="600">
+</a>
 </p>
 
 <p align="center">
